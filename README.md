@@ -1,5 +1,3 @@
-# demo1
-This is a demo
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk  # Sử dụng ttk cho combobox
@@ -151,11 +149,11 @@ def open_form3():
     #cal = Calendar(groupbox, selectmode='day', date_pattern='yyyy-mm-dd')
     #cal.pack(pady=10) 
 
-    label_selected_date = tk.Label(groupbox,text="Chưa chọn ngày", font=('Times New Ronman', 12))
-    label_selected_date.grid(row=5,column=1,pady=10)  
+    entry_selected_date = tk.Entry(groupbox,width=20)
+    entry_selected_date.grid(row=5,column=1,pady=5)  
 # Tạo Button để hiển thị ngày đã chọn
     #btn_show = tk.Button(groupbox, text="Chọn ngày", command=lambda: hien_lich(label_selected_date, cal))
-    btn_show = tk.Button(groupbox, text="Chọn ngày", command=lambda: hien_lich_form6(form3, label_selected_date))
+    btn_show = tk.Button(groupbox, text="Chọn ngày", command=lambda: hien_lich_form6(form3, entry_selected_date))
     btn_show.grid(row=6,column=0,pady=10)
 
     btn_save=tk.Button(groupbox,text="Lưu phiếu nhập").grid(row=5,column=2,padx=5,pady=5)
@@ -191,7 +189,7 @@ def open_form3():
 
     label_title3 = tk.Label(frame, text="Chi tiết phiếu nhập", anchor="w")
     label_title3.grid(row=13, column=0, padx=5, pady=5, sticky="w")
-
+    
    
 # Form4 Quản lý bán sách
 def open_form4():
@@ -270,29 +268,36 @@ def open_form5():
 
     btn_thoat=tk.Button(frame4,text="Thoát",command=form5.destroy)
     btn_thoat.grid(row=2,column=2,padx=5,pady=5)
-def hien_lich(label_selected_date, cal):
+def hien_lich(entry_selected_date, cal):
     # Lấy ngày đã chọn từ Calendar (dạng 'yyyy-mm-dd')
     selected_date = cal.get_date()
     
     # Cập nhật label với ngày đã chọn
-    label_selected_date.config(text=f"Ngày đã chọn: {selected_date}")    
-def hien_lich_form6(form3, label_selected_date):
+    #entry_selected_date.config(text=f"Ngày đã chọn:{selected_date}")  
+    entry_selected_date.config(selected_date)  
+def hien_lich_form6(form3, entry_selected_date):
     form6= tk.Toplevel(form3)
     form6.title("Chọn ngày")
     form6.geometry("300x300")
     
-    cal=Calendar(form6,selectmode='day', year=2024, month=11, day=16)
+    #calendar = Calendar(selectmode='day', date_pattern='yyyy-mm-dd')
+    #cal=Calendar(form6,selectmode='day', year=2024, month=11, day=16)
+    cal=Calendar(form6,selectmode='day',date_pattern='dd-mm-yyyy')
     cal.grid(pady=20)
 
-    btn_show_calendar = tk.Button(root, text="Hiển thị lịch", command=hien_lich)
-    btn_show_calendar.grid(pady=20)
+    #btn_show_calendar = tk.Button(root, text="Hiển thị lịch", command=hien_lich)
+    #btn_show_calendar.grid(pady=20)
     def get_selected_date():
         selected_date = cal.get_date()  # Lấy ngày chọn từ Calendar
-        label_selected_date.config(selected_date)  # Cập nhật label trong form3
-        hien_lich_form6.destroy()  
+        #entry_selected_date.config(selected_date)  # Cập nhật vào entry trong form3
+        # Cập nhật giá trị vào entry_selected_date
+        entry_selected_date.delete(0, tk.END)  # Xóa giá trị cũ
+        entry_selected_date.insert(0, selected_date)  # Chèn ngày mới vào Entry
+        form6.destroy()  
 
     btn_select_date = tk.Button(form6, text="Chọn ngày", command=get_selected_date)
     btn_select_date.grid(row=1,column=0)
+
 # Create the main window
 root = tk.Tk()
 root.title("Login")
