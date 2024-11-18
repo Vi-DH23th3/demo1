@@ -3,6 +3,7 @@ from tkinter import messagebox
 from tkinter import ttk  # Sử dụng ttk cho combobox
 from tkcalendar import Calendar
 import sqlite3 #kết nối với sql
+import pyodbc
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -52,6 +53,7 @@ def save_hoadon(tenkh, masach, soluong, gia, tongtien):
         messagebox.showinfo("Thông báo", "Hóa đơn đã được lưu.")
     else:
         messagebox.showwarning("Cảnh báo", "Vui lòng nhập đầy đủ thông tin.")
+
 
 # Cập nhật hàm lưu hóa đơn
 def save_invoice(entry_tenkh, entry_sl, entry_tensach, entry_gia, entry_tong):
@@ -111,12 +113,52 @@ def open_form2():
     main_menu.add_cascade(label="Thoát", menu=menu_thoat)
 
     form2.config(menu=main_menu)
- 
+# Kết nối và lấy dữ liệu từ cơ sở dữ liệu
+
+# Chèn dữ liệu vào ListView
+
+def them(tree, entry_sopn, entry_ms, entry_tens, entry_theloai, entry_tacgia, combobox_nxb, entry_sl, entry_gia): 
+    try:
+        ma_pn = entry_sopn.get()
+        ma_sach = entry_ms.get()
+        ten_sach = entry_tens.get()
+        the_loai = entry_theloai.get()
+        tacgia = entry_tacgia.get()
+        nxb = combobox_nxb.get()
+        so_luong = entry_sl.get()
+        thanh_tien = entry_gia.get()
+
+        # Kiểm tra nếu các trường đều có giá trị
+        if not all([ma_pn, ma_sach, ten_sach, the_loai, tacgia, nxb, so_luong, thanh_tien]):
+            messagebox.showwarning("Lỗi nhập liệu", "Vui lòng điền đầy đủ các trường.")
+            return
+        
+        # Thêm dữ liệu vào Treeview
+        tree.insert('', 'end', values=(ma_pn, ma_sach, ten_sach, the_loai, tacgia, nxb, so_luong, thanh_tien))
+
+        # Xóa các trường nhập liệu
+        entry_sopn.delete(0, 'end')
+        entry_ms.delete(0, 'end')
+        entry_tens.delete(0, 'end')
+        entry_theloai.delete(0, 'end')
+        entry_tacgia.delete(0, 'end')
+        entry_sl.delete(0, 'end')
+        entry_gia.delete(0, 'end')
+    except Exception as e:
+        messagebox.showerror("Lỗi", f"Đã xảy ra lỗi khi thêm dữ liệu: {e}")
+
+def delete_data(tree):
+    selected_item = tree.selection()
+    if selected_item:
+        tree.delete(selected_item)
+    else:
+        messagebox.showwarning("Chưa chọn", "Vui lòng chọn một dòng để xóa.")
+
 #form nhập sách
 def open_form3():
     form3 = tk.Toplevel(root)
     form3.title("Nhập sách")
-    form3.geometry("616x624")
+    form3.geometry("820x624")
 
     label_header = tk.Label(form3, text="Phiếu nhập sách", font=("Times New Roman", 20),fg="blue")
     label_header.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
@@ -125,40 +167,36 @@ def open_form3():
 # Tạo frame1
     frame = tk.Frame(form3)
     frame.grid(row=1, column=0, padx=20, pady=20)
-
 # Tiêu đề của groupbox
     label_title1 = tk.Label(frame, text="Thông tin phiếu nhập", anchor="w")
     label_title1.grid(row=2, column=0, padx=5, pady=5, sticky="w")
-
 # Tạo một groupbox của Thông tin phiếu nhập
     groupbox = tk.Frame(frame)
     groupbox.grid(row=3, rowspan=3)
-    label_sophieu=tk.Label(groupbox,text="Số phiếu nhập").grid(row=4,column=0)
+    label_sophieu=tk.Label(groupbox,text="Số phiếu nhập")
+    label_sophieu.grid(row=4,column=0)
     entry_sopn=tk.Entry(groupbox,width=20)
     entry_sopn.grid(row=4,column=1)
     
     label2=tk.Label(groupbox,text="Nhà xuất bản")
     label2.grid(row=4,column=2)
-    combobox_nxb = ttk.Combobox(groupbox, values=["NXB A", "NXB B", "NXB C"], width=20)
+    combobox_nxb = ttk.Combobox(groupbox, values=["NXB Kim Đồng", "NXB Hội văn học", "NXB Đông Á"], width=20)
     combobox_nxb.grid(row=4, column=3, padx=5, pady=5)
 
-    label_ngay=tk.Label(groupbox,text="Ngày nhập").grid(row=5,column=0)
-    #entry_ngaynhap=tk.Entry(groupbox,width=20).grid(row=5,column=1)
-    #calendar = Calendar(groupbox, selectmode='day', date_pattern='yyyy-mm-dd')
-    #calendar.pack(row=5,column=1,padx=10, pady=10) 
-    #cal = Calendar(groupbox, selectmode='day', date_pattern='yyyy-mm-dd')
-    #cal.pack(pady=10) 
-
+    label_ngay=tk.Label(groupbox,text="Ngày nhập")
+    label_ngay.grid(row=5,column=0)
     entry_selected_date = tk.Entry(groupbox,width=20)
     entry_selected_date.grid(row=5,column=1,pady=5)  
 # Tạo Button để hiển thị ngày đã chọn
-    #btn_show = tk.Button(groupbox, text="Chọn ngày", command=lambda: hien_lich(label_selected_date, cal))
     btn_show = tk.Button(groupbox, text="Chọn ngày", command=lambda: hien_lich_form6(form3, entry_selected_date))
     btn_show.grid(row=6,column=0,pady=10)
 
-    btn_save=tk.Button(groupbox,text="Lưu phiếu nhập").grid(row=5,column=2,padx=5,pady=5)
-    btn_new=tk.Button(groupbox,text="Lập phiếu mới").grid(row=5,column=3,padx=5,pady=5)
-    
+    btn_save=tk.Button(groupbox,text="Lưu phiếu nhập")
+    btn_save.grid(row=5,column=2)
+    btn_them = tk.Button(groupbox, text="Them", command=lambda: them(tree, entry_sopn, entry_ms, entry_tens, entry_theloai, entry_tacgia, combobox_nxb, entry_sl, entry_gia))
+    btn_them.grid(row=5, column=3)
+    btn_delete = tk.Button(groupbox, text="Xóa", command=lambda: delete_data(tree))
+    btn_delete.grid(row=5, column=4)
     # Tạo Frame thứ 2 
     frame = tk.Frame(form3)
     frame.grid(row=7, column=0, padx=20, pady=20)
@@ -170,27 +208,47 @@ def open_form3():
 # Tạo một groupbox của Thông tin sách
     groupbox2 = tk.Frame(frame)
     groupbox2.grid(row=8, rowspan=5)
-    label_ma=tk.Label(groupbox2,text="Mã sách").grid(row=9,column=0)
-    entry_ms=tk.Entry(groupbox2,width=30).grid(row=9,column=1)
-    label_sl=tk.Label(groupbox2,text="Số lượng").grid(row=10,column=0)
-    entry_sl=tk.Entry(groupbox2,width=30).grid(row=10,column=1)
-    label_gia=tk.Label(groupbox2,text="Thành tiền").grid(row=11,column=0)
-    entry_gia=tk.Entry(groupbox2,width=30).grid(row=11,column=1)
+    label_ma=tk.Label(groupbox2,text="Mã sách")
+    label_ma.grid(row=9,column=0)
+    entry_ms=tk.Entry(groupbox2,width=30)
+    entry_ms.grid(row=9,column=1)
+    label_sl=tk.Label(groupbox2,text="Số lượng")
+    label_sl.grid(row=10,column=0)
+    entry_sl=tk.Entry(groupbox2,width=30)
+    entry_sl.grid(row=10,column=1)
+    label_gia=tk.Label(groupbox2,text="Thành tiền")
+    label_gia.grid(row=11,column=0)
+    entry_gia=tk.Entry(groupbox2,width=30)
+    entry_gia.grid(row=11,column=1)
 
-    label_ten=tk.Label(groupbox2,text="Tên sách").grid(row=9,column=2,pady=5)
-    entry_tens=tk.Entry(groupbox2,width=30).grid(row=9,column=3)
-    label_tl=tk.Label(groupbox2,text="Thể loại").grid(row=10,column=2)
-    entry_theloai=tk.Entry(groupbox2,width=30).grid(row=10,column=3)
-    label_tg=tk.Label(groupbox2,text="Tác giả").grid(row=11,column=2)
-    entry_tacgia=tk.Entry(groupbox2,width=30).grid(row=11,column=3)
+    label_ten=tk.Label(groupbox2,text="Tên sách")
+    label_ten.grid(row=9,column=2,pady=5)
+    entry_tens=tk.Entry(groupbox2,width=30)
+    entry_tens.grid(row=9,column=3)
+    label_tl=tk.Label(groupbox2,text="Thể loại")
+    label_tl.grid(row=10,column=2)
+    entry_theloai=tk.Entry(groupbox2,width=30)
+    entry_theloai.grid(row=10,column=3)
+    label_tg=tk.Label(groupbox2,text="Tác giả")
+    label_tg.grid(row=11,column=2)
+    entry_tacgia=tk.Entry(groupbox2,width=30)
+    entry_tacgia.grid(row=11,column=3)
 #Tạo frame3
     frame = tk.Frame(form3)
     frame.grid(row=12, column=0, padx=20, pady=20)
 
     label_title3 = tk.Label(frame, text="Chi tiết phiếu nhập", anchor="w")
-    label_title3.grid(row=13, column=0, padx=5, pady=5, sticky="w")
+    label_title3.grid(row=12, column=0, padx=5, pady=5, sticky="w")
+    columns = ('Mã phiếu nhập', 'Mã sách', 'Tên sách','Thể loại','Tác giả','NXB','Số lượng','Thành tiền',)
+    tree=ttk.Treeview(frame,columns=columns, show='headings')
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, width=140)
+    tree.grid(row=14,padx=5, pady=5)
+    #btn_add = tk.Button(frame, text="Thêm", command=lambda:them(tree,entry_sopn,entry_ms,entry_tens,entry_theloai,entry_tacgia,combobox_nxb,entry_sl,entry_gia))
+    #btn_add.grid(row=15, column=0, padx=5, pady=5, sticky="w")
+
     
-   
 # Form4 Quản lý bán sách
 def open_form4():
     form4 = tk.Toplevel(root)
@@ -280,16 +338,11 @@ def hien_lich_form6(form3, entry_selected_date):
     form6.title("Chọn ngày")
     form6.geometry("300x300")
     
-    #calendar = Calendar(selectmode='day', date_pattern='yyyy-mm-dd')
-    #cal=Calendar(form6,selectmode='day', year=2024, month=11, day=16)
     cal=Calendar(form6,selectmode='day',date_pattern='dd-mm-yyyy')
     cal.grid(pady=20)
 
-    #btn_show_calendar = tk.Button(root, text="Hiển thị lịch", command=hien_lich)
-    #btn_show_calendar.grid(pady=20)
     def get_selected_date():
         selected_date = cal.get_date()  # Lấy ngày chọn từ Calendar
-        #entry_selected_date.config(selected_date)  # Cập nhật vào entry trong form3
         # Cập nhật giá trị vào entry_selected_date
         entry_selected_date.delete(0, tk.END)  # Xóa giá trị cũ
         entry_selected_date.insert(0, selected_date)  # Chèn ngày mới vào Entry
